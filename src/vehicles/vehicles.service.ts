@@ -51,73 +51,75 @@ export class VehiclesService {
 //       return WriteResponse(500, false, 'Something went wrong');
 //     }
 //   }
-async createOrUpdate(createVehicleDto: CreateVehicleDto) {
-  try {
-    const { id, number_plate } = createVehicleDto;
+// async createOrUpdate(createVehicleDto: CreateVehicleDto) {
+//   try {
+//     const { id, number_plate } = createVehicleDto;
 
-    // Check if number_plate already exists for another vehicle
-    const existingByPlate = await this.vehiclesRepository.findOne({
-      where: { number_plate },
-    });
+//     // Check if number_plate already exists for another vehicle
+//     const existingByPlate = await this.vehiclesRepository.findOne({
+//       where: { number_plate },
+//     });
 
-    if (createVehicleDto.id) {
-      // Update flow
-      const existingVehicle = await this.vehiclesRepository.findOne({ where: { id } });
+//     if (createVehicleDto.id) {
+//       // Update flow
+//       const existingVehicle = await this.vehiclesRepository.findOne({ where: { id } });
 
-      if (!existingVehicle) {
-        return WriteResponse(404, false, 'Vehicle not found');
-      }
+//       if (!existingVehicle) {
+//         return WriteResponse(404, false, 'Vehicle not found');
+//       }
 
-      if (existingByPlate && existingByPlate.id !== id) {
-        return WriteResponse(400, false, 'Number plate already exists for another vehicle');
-      }
+//       if (existingByPlate && existingByPlate.id !== id) {
+//         return WriteResponse(400, false, 'Number plate already exists for another vehicle');
+//       }
 
-      const updatedVehicle = await this.vehiclesRepository.save({
-        ...existingVehicle,
-        ...createVehicleDto,
-      });
+//       const updatedVehicle = await this.vehiclesRepository.save({
+//         ...existingVehicle,
+//         ...createVehicleDto,
+//       });
 
-      // Generate QR code
-      const qrData = {
-        number_plate: updatedVehicle.number_plate,
-        vehicle_type: updatedVehicle.vehicle_type,
-        phone: updatedVehicle.phone,
-        created_on: updatedVehicle.created_on,
-      };
-      const qrString = JSON.stringify(qrData);
-      const qrCode = await QRCode.toDataURL(qrString);
-      await this.processQrScan(createVehicleDto);
+//       // Generate QR code
+//       const qrData = {
+//         number_plate: updatedVehicle.number_plate,
+//         vehicle_type: updatedVehicle.vehicle_type,
+//         phone: updatedVehicle.phone,
+//         created_on: updatedVehicle.created_on,
+//       };
+//       const qrString = JSON.stringify(qrData);
+//       const qrCode = await QRCode.toDataURL(qrString);
+//       await this.processQrScan(createVehicleDto);
 
-      return WriteResponse(200, { ...updatedVehicle, qrCode }, 'Vehicle updated successfully');
-    } else {
-      delete createVehicleDto.id;
-      // Create flow
-      if (existingByPlate) {
-        return WriteResponse(400, false, 'Vehicle already exists');
-      }
+//       return WriteResponse(200, { ...updatedVehicle, qrCode }, 'Vehicle updated successfully');
+//     } else {
+//       delete createVehicleDto.id;
+//       // Create flow
+//       if (existingByPlate) {
+//         return WriteResponse(400, false, 'Vehicle already exists');
+//       }
 
-      const vehicle = await this.vehiclesRepository.save({
-        ...createVehicleDto,
-      });
+//       const vehicle = await this.vehiclesRepository.save({
+//         ...createVehicleDto,
+//       });
 
-      // Generate QR code
-      const qrData = {
-        number_plate: vehicle.number_plate,
-        vehicle_type: vehicle.vehicle_type,
-        phone: vehicle.phone,
-        created_on: vehicle.created_on,
-      };
-      const qrString = JSON.stringify(qrData);
-      const qrCode = await QRCode.toDataURL(qrString);
-      // await this.processQrScan(vehicle);
+//       // Generate QR code
+//       const qrData = {
+//         number_plate: vehicle.number_plate,
+//         vehicle_type: vehicle.vehicle_type,
+//         phone: vehicle.phone,
+//         created_on: vehicle.created_on,
+//       };
+//       const qrString = JSON.stringify(qrData);
+//       const qrCode = await QRCode.toDataURL(qrString);
+//       // await this.processQrScan(vehicle);
 
-      return WriteResponse(200, { ...vehicle, qrCode }, 'Vehicle created successfully');
-    }
-  } catch (error) {
-    console.error(error);
-    return WriteResponse(500, false, 'Something went wrong');
-  }
-}
+//       return WriteResponse(200, { ...vehicle, qrCode }, 'Vehicle created successfully');
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return WriteResponse(500, false, 'Something went wrong');
+//   }
+// }
+
+
 
 
 

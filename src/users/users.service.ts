@@ -12,7 +12,8 @@ import { CreateUserDto, LoginDto } from './dto/create-user.dto';
 import { Users } from './entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { WriteResponse } from 'src/shared/response';
+import { paginateResponse, WriteResponse } from 'src/shared/response';
+import { IPagination } from 'src/shared/paginationEum';
 
 @Injectable()
 export class UserService {
@@ -125,14 +126,14 @@ async login(dto: LoginDto) {
   }
 
   // ✅ Check if device is same or different
-  if (user.device_fingerprint && user.device_fingerprint !== dto.device_fingerprint) {
-    // Already logged in from another device
-    return WriteResponse(409, null, 'You are already logged in from another device. Do you want to logout from the old device?');
-  }
+  // if (user.device_fingerprint && user.device_fingerprint !== dto.device_fingerprint) {
+  //   // Already logged in from another device
+  //   return WriteResponse(409, null, 'You are already logged in from another device. Do you want to logout from the old device?');
+  // }
 
   // ✅ First login or same device: update fingerprint and login
-  user.device_fingerprint = dto.device_fingerprint;
-await this.userRepo.update(user.id, { device_fingerprint: dto.device_fingerprint });
+//   user.device_fingerprint = dto.device_fingerprint;
+// await this.userRepo.update(user.id, { device_fingerprint: dto.device_fingerprint });
 
 
   const payload = { sub: user.id, role: user.role };
@@ -141,7 +142,7 @@ await this.userRepo.update(user.id, { device_fingerprint: dto.device_fingerprint
   const result = {
     access_token,
     id: user.id,
-    name: user.name,
+    name: user.user_name,
     email: user.email,
     phone_number: user.phone_number,
     role: user.role,
@@ -151,36 +152,36 @@ await this.userRepo.update(user.id, { device_fingerprint: dto.device_fingerprint
 }
 
 
-async forceLogin(dto: LoginDto) {
-  const user = await this.userRepo.findOne({ where: { email: dto.email,is_deleted: false } });
+// async forceLogin(dto: LoginDto) {
+//   const user = await this.userRepo.findOne({ where: { email: dto.email,is_deleted: false } });
 
-  if (!user || !user.password || !dto.password) {
-    return WriteResponse(401, null, 'Invalid credentials');
-  }
+//   if (!user || !user.password || !dto.password) {
+//     return WriteResponse(401, null, 'Invalid credentials');
+//   }
 
-  const isValid = await argon2.verify(user.password, dto.password);
-  if (!isValid) {
-    return WriteResponse(401, null, 'Invalid credentials');
-  }
+//   const isValid = await argon2.verify(user.password, dto.password);
+//   if (!isValid) {
+//     return WriteResponse(401, null, 'Invalid credentials');
+//   }
 
-  // ✅ Override fingerprint and login
-  user.device_fingerprint = dto.device_fingerprint;
-  await this.userRepo.update(user.id, { device_fingerprint: dto.device_fingerprint });
+//   // ✅ Override fingerprint and login
+//   user.device_fingerprint = dto.device_fingerprint;
+//   await this.userRepo.update(user.id, { device_fingerprint: dto.device_fingerprint });
 
-  const payload = { sub: user.id, role: user.role };
-  const access_token = this.jwt.sign(payload);
+//   const payload = { sub: user.id, role: user.role };
+//   const access_token = this.jwt.sign(payload);
 
-  const result = {
-    access_token,
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    phone_number: user.phone_number,
-    role: user.role,
-  };
+//   const result = {
+//     access_token,
+//     id: user.id,
+//     name: user.user_name,
+//     email: user.email,
+//     phone_number: user.phone_number,
+//     role: user.role,
+//   };
 
-  return WriteResponse(200, result, 'Old device logged out. Login successful');
-}
+//   return WriteResponse(200, result, 'Old device logged out. Login successful');
+// }
 
 
   async findAll() {
@@ -225,4 +226,34 @@ async forceLogin(dto: LoginDto) {
       return WriteResponse(500, null, 'Something went wrong');
     }
   }
+
+  async pagination(pagination: IPagination, req): Promise<any> {
+    const { curPage, perPage, whereClause } = pagination;
+    let lwhereClause = `f.is_deleted = false`;
+    const fieldsToSearch = ["user_name","contractor_name","phone_number","email"];
+    fieldsToSearch.forEach((field) => {
+      const fieldValue = whereClause.find((p) => p.key === field)?.value;
+      if (fieldValue) {
+        lwhereClause += ` AND f.${field} LIKE '%${fieldValue}%'`;
+      }
+    });
+
+    const allValue = whereClause.find((p) => p.key === "all")?.value;
+    if (allValue) {
+      const conditions = fieldsToSearch
+        .map((field) => `f.${field} LIKE '%${allValue}%'`)
+        .join(" OR ");
+      lwhereClause += ` AND (${conditions})`;
+    }
+    const skip = (curPage - 1) * perPage;
+    const [list, count] = await this.userRepo
+      .createQueryBuilder("f")
+      .where(lwhereClause)
+      .skip(skip)
+      .take(perPage)
+      .orderBy("f.created_on", "DESC")
+      .getManyAndCount();
+    return paginateResponse(list, count);
+  }
+
 }

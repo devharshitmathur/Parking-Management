@@ -14,6 +14,7 @@ export class AttendantsController {
     createOrUpdate(@Body() dto: CreateAttendantDto) {
       return this.attendantsService.createOrUpdateUser(dto);
     }
+    
   
     @Get('getAll')
     @UseGuards(JwtAuthGuard)

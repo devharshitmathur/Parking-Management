@@ -13,17 +13,38 @@ export class Vehicle {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 20, nullable: true })
-  number_plate?: string;
+  @Column()
+  parkingLocationId: string;
 
-   @Column({ type: 'enum', enum: VehicleType, default: VehicleType.TwoWheeler })
-  vehicle_type: VehicleType;
+  @Column()
+  contractor_id: string;
 
-  @Column({ length: 20, nullable: true })
-  phone?: string;
+  @Column({ nullable: true })
+  plateNumber: string;
 
-  @Column({ type: 'char', length: 36, nullable: true })
-  contractor_id?: string;
+  @Column()
+  vehicle_type: '2W' | '4W';
+
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column({ default: false })
+  isCheckedOut: boolean;
+
+  @Column({ type: 'datetime' })
+  checkInTime: Date;
+
+  @Column({ type: 'datetime', nullable: true })
+  checkOutTime: Date;
+
+  @Column({ nullable: true, type: 'float' })
+  totalHours: number;
+
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
+  paymentAmount: number;
+
+  @Column({ nullable: true })
+  receiptId: string;
 
   @Column({ type: 'char', length: 36, nullable: true })
   created_by?: string;

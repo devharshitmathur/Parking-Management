@@ -1,7 +1,13 @@
 // src/user/user.entity.ts
 import { Contractor } from 'src/contractors/entities/contractor.entity';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
-
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+} from 'typeorm';
 
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
@@ -20,7 +26,10 @@ export class Users {
   id: string;
 
   @Column({ length: 255 })
-  name: string;
+  user_name: string;
+
+  @Column({ length: 255 })
+  contractor_name: string;
 
   @Column({ length: 255, unique: true })
   email: string;
@@ -28,20 +37,27 @@ export class Users {
   @Column()
   password?: string;
 
-    @Column({ type: 'enum', enum: Contractor_Status, default: Contractor_Status.INACTIVE })
-  status: Contractor_Status;
-
   @Column({ length: 20, nullable: true })
   phone_number: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CONTRACTOR })
   role: UserRole;
 
+  @Column({
+    type: 'enum',
+    enum: Contractor_Status,
+    default: Contractor_Status.INACTIVE,
+  })
+  status: Contractor_Status;
+
   @Column({ default: true })
-  isFirstLogin: boolean;
+  is_first_login: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   device_fingerprint?: string;
+
+  @Column({ type: 'char', length: 36, nullable: true })
+  subscription_plan_id?: string;
 
   @Column({ type: 'char', length: 36, nullable: true })
   created_by: string;
@@ -63,5 +79,4 @@ export class Users {
 
   @Column({ type: 'tinyint', default: 0 })
   is_deleted: boolean;
-
 }
